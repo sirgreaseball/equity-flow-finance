@@ -12,17 +12,6 @@ dist
 dist-ssr
 *.local
 
-# Vite / tooling caches (do not commit)
-.vite
-*.tsbuildinfo
-.turbo
-
-# Tests & coverage
-coverage
-*.lcov
-playwright-report
-test-results
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
