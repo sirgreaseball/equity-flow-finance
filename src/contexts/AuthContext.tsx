@@ -39,19 +39,18 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  // Try to load auth from localStorage to keep session alive during hot reloads
-  const [user, setUser] = useState<User | null>(() => {
+  const cachedUser = (() => {
     try {
       const saved = localStorage.getItem('equityFlow_user');
       return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+    } catch { return null; }
+  })();
 
+  const [user, setUser] = useState<User | null>(cachedUser);
   const [walletAddress, setWalletAddress] = useState<string | null>(() => localStorage.getItem('equityFlow_wallet'));
   const [isConnectingWallet, setIsConnectingWallet] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  // If we already have a cached user, don't block the UI
+  const [isLoading, setIsLoading] = useState(!cachedUser);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -127,6 +126,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     else localStorage.removeItem('equityFlow_wallet');
   }, [walletAddress]);
 
+  // Persist user to localStorage so next page load is instant
+  useEffect(() => {
+    if (user) localStorage.setItem('equityFlow_user', JSON.stringify(user));
+    else localStorage.removeItem('equityFlow_user');
+  }, [user]);
+
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
@@ -172,6 +177,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     await signOut(auth);
     setUser(null);
     setWalletAddress(null);
+    localStorage.removeItem('equityFlow_user');
   };
 
   const connectWallet = async () => {
