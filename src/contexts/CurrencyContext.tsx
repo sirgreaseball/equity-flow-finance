@@ -36,14 +36,18 @@ export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }
         const response = await fetch('https://open.er-api.com/v6/latest/USD');
         const data = await response.json();
         if (data && data.rates && data.rates.INR) {
-          setExchangeRate(data.rates.INR);
-          console.log(`Live Exchange Rate Updated: $1 = ₹${data.rates.INR}`);
+          // Store the USD per INR rate (inverse of INR per USD)
+          const usdPerInr = 1 / data.rates.INR;
+          setExchangeRate(usdPerInr);
+          console.log(`Live Exchange Rate Updated: ₹1 = $${usdPerInr.toFixed(4)}`);
         }
       } catch (error) {
         console.error("Failed to fetch exchange rate, using fallback:", error);
       }
     };
     fetchRate();
+    const interval = setInterval(fetchRate, 5 * 60 * 1000); // Refresh every 5 minutes for real‑time rates
+    return () => clearInterval(interval);
   }, []);
 
   const setCurrency = (c: Currency) => {
@@ -53,16 +57,18 @@ export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const symbol = currency === 'USD' ? '$' : '₹';
 
-  // amount is assumed to be in the base currency (INR)
+  // amount is assumed to be stored in INR (base currency)
   const convert = useCallback((amount: number): number => {
-    if (currency === 'INR') return amount;
-    return amount / exchangeRate;
+    if (currency === 'INR') return amount; // display as INR
+    // Convert INR to USD using the stored rate (USD per INR)
+    return amount * exchangeRate;
   }, [currency, exchangeRate]);
 
-  // converts a displayed currency value back to base currency (INR)
+  // Convert displayed value back to base INR
   const toBaseCurrency = useCallback((amount: number): number => {
     if (currency === 'INR') return amount;
-    return amount * exchangeRate;
+    // Convert USD back to INR
+    return amount / exchangeRate;
   }, [currency, exchangeRate]);
 
   const format = useCallback((amount: number): string => {

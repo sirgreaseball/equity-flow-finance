@@ -10,10 +10,26 @@ import { toast } from 'sonner';
 
 // Dummy Order Book entries
 const openOrders = [
-  { id: 1, sellerHash: '0x94B...2F11', business: 'Acme Logistics', tokenTicker: 'ACME', amount: '2.5%', price: 450000, delta: '+12%', kyc: true },
-  { id: 2, sellerHash: '0x1A4...0F8C', business: 'TechCorp Solutions', tokenTicker: 'TCS', amount: '0.5%', price: 75000, delta: '-2%', kyc: true },
-  { id: 3, sellerHash: '0xCD7...4A9D', business: 'Cloud 9 Software', tokenTicker: 'C9S', amount: '1.0%', price: 120000, delta: '+5%', kyc: true },
-  { id: 4, sellerHash: '0x55E...B341', business: 'GreenEnergy Co', tokenTicker: 'GRN', amount: '5.0%', price: 1200000, delta: '+45%', kyc: false },
+  { id: 1, sellerHash: '0x94B...2F11', business: 'TechCorp Solutions', tokenTicker: 'TCS', amount: '2.5%', price: 125000, delta: '+12%', kyc: true },
+  { id: 2, sellerHash: '0x1A4...0F8C', business: 'Ember Coffee Roasters', tokenTicker: 'EMB', amount: '0.5%', price: 8500, delta: '-2%', kyc: true },
+  { id: 3, sellerHash: '0xCD7...4A9D', business: 'Apex Performance Labs', tokenTicker: 'APX', amount: '1.0%', price: 18000, delta: '+5%', kyc: true },
+  { id: 4, sellerHash: '0x55E...B341', business: 'Vault Brewing Co.', tokenTicker: 'VLT', amount: '5.0%', price: 135000, delta: '+45%', kyc: false },
+  { id: 5, sellerHash: '0x88F...C992', business: 'Luminary EdTech', tokenTicker: 'LUM', amount: '1.2%', price: 27000, delta: '+8%', kyc: true },
+  { id: 6, sellerHash: '0x33A...D110', business: 'Terra Fresh Farms', tokenTicker: 'TER', amount: '4.0%', price: 60000, delta: '+22%', kyc: true },
+  { id: 7, sellerHash: '0x99B...E445', business: 'Stitch & Thread', tokenTicker: 'STH', amount: '0.25%', price: 2500, delta: '-5%', kyc: false },
+  { id: 8, sellerHash: '0x22C...F556', business: 'RevUp Auto', tokenTicker: 'REV', amount: '3.5%', price: 77000, delta: '+18%', kyc: true },
+  { id: 9, sellerHash: '0x11D...A778', business: 'Clarity Health AI', tokenTicker: 'CLR', amount: '10.0%', price: 300000, delta: '+150%', kyc: true },
+  { id: 10, sellerHash: '0x44E...B889', business: 'TechCorp Solutions', tokenTicker: 'TCS', amount: '0.1%', price: 5500, delta: '+14%', kyc: true },
+  { id: 11, sellerHash: '0x77G...C001', business: 'Ember Coffee Roasters', tokenTicker: 'EMB', amount: '2.0%', price: 33000, delta: '+1%', kyc: false },
+  { id: 12, sellerHash: '0x66H...D223', business: 'Luminary EdTech', tokenTicker: 'LUM', amount: '0.75%', price: 16500, delta: '+7%', kyc: true },
+  { id: 13, sellerHash: '0xAA1...ZZ9', business: 'EcoClean Solutions', tokenTicker: 'ECO', amount: '2.2%', price: 88000, delta: '+9%', kyc: true },
+  { id: 14, sellerHash: '0xBB2...YY8', business: 'SolarFuture Ltd.', tokenTicker: 'SOL', amount: '0.9%', price: 47000, delta: '-3%', kyc: false },
+  { id: 15, sellerHash: '0xCC3...XX7', business: 'HealthPlus AI', tokenTicker: 'HPA', amount: '1.5%', price: 62000, delta: '+6%', kyc: true },
+  { id: 16, sellerHash: '0xDD4...WW6', business: 'AgriGrowth Co.', tokenTicker: 'AGG', amount: '3.0%', price: 102000, delta: '+12%', kyc: true },
+  { id: 17, sellerHash: '0xEE5...VV5', business: 'FinTech Innovations', tokenTicker: 'FIN', amount: '0.4%', price: 34000, delta: '+2%', kyc: false },
+  { id: 18, sellerHash: '0xFF6...UU4', business: 'UrbanMobility', tokenTicker: 'URB', amount: '0.7%', price: 55000, delta: '-1%', kyc: true },
+  { id: 19, sellerHash: '0xGG7...TT3', business: 'Quantum Labs', tokenTicker: 'QLB', amount: '5.5%', price: 215000, delta: '+20%', kyc: true },
+  { id: 20, sellerHash: '0xHH8...SS2', business: 'BioTech Ventures', tokenTicker: 'BIO', amount: '1.1%', price: 73000, delta: '+4%', kyc: false },
 ];
 
 const Trade = () => {

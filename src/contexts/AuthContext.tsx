@@ -57,7 +57,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         // --- Demo Account Sync Logic ---
-        const demoEmails = ['john@example.com', 'sarah@techcorp.com'];
+        const demoEmails = ['j.mercer@firstcapitalgroup.io', 'dhruvsonar@gmail.com', 'sarah.johnson@techcorpsolutions.com'];
         if (firebaseUser.email && demoEmails.includes(firebaseUser.email)) {
           console.log(`Demo user detected: ${firebaseUser.email}. Syncing data...`);
           

@@ -114,67 +114,46 @@ export const createInvestment = async (investmentData: Omit<Investment, 'id'>) =
 };
 
 // --- Governance ---
-import { Proposal, BusinessUpdate, Vote, mockProposals, mockBusinessUpdates } from "@/data/msme";
+import { Proposal, BusinessUpdate, Vote } from "@/data/msme";
 
 export const getProposalsByBusinessId = async (businessId: string): Promise<Proposal[]> => {
-  // Try to get from Firebase (future proof)
-  try {
-    const q = query(collection(db, "proposals"), where("businessId", "==", businessId));
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty) {
-      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Proposal));
-    }
-  } catch (error) {
-    console.warn("Firebase proposals error, falling back to mocks:", error);
-  }
-  
-  // Fallback to mocks
-  return mockProposals.filter(p => p.businessId === businessId);
+  const q = query(collection(db, "proposals"), where("businessId", "==", businessId));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Proposal));
 };
 
 export const getBusinessUpdates = async (businessId: string): Promise<BusinessUpdate[]> => {
-  try {
-    const q = query(collection(db, "business_updates"), where("businessId", "==", businessId));
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty) {
-      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BusinessUpdate));
-    }
-  } catch (error) {
-    console.warn("Firebase updates error, falling back to mocks:", error);
-  }
-
-  return mockBusinessUpdates.filter(u => u.businessId === businessId);
+  const q = query(collection(db, "businessUpdates"), where("businessId", "==", businessId));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BusinessUpdate));
 };
 
-// Persistence for votes in demo environment
-const LOCAL_VOTES_KEY = 'equity_flow_votes';
-
+// --- Votes (stored in Firebase, not localStorage) ---
 export const getVotesForProposal = async (proposalId: string): Promise<Vote[]> => {
-  // Get from localStorage for persistent demo
-  const localVotes = JSON.parse(localStorage.getItem(LOCAL_VOTES_KEY) || '[]');
-  return localVotes.filter((v: Vote) => v.proposalId === proposalId);
+  const q = query(collection(db, "votes"), where("proposalId", "==", proposalId));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Vote));
 };
 
 export const castVote = async (voteData: Omit<Vote, 'id' | 'votedAt'>): Promise<string> => {
-  const scrollId = Math.random().toString(36).substring(7);
-  const newVote: Vote = {
-    ...voteData,
-    id: `vote-${scrollId}`,
-    votedAt: new Date().toISOString()
-  };
-
-  // Save to localStorage
-  const localVotes = JSON.parse(localStorage.getItem(LOCAL_VOTES_KEY) || '[]');
-  
-  // Prevent double voting
-  const existingVote = localVotes.find((v: Vote) => v.proposalId === voteData.proposalId && v.userId === voteData.userId);
-  if (existingVote) {
+  // Prevent double voting — check Firebase first
+  const existingQ = query(
+    collection(db, "votes"),
+    where("proposalId", "==", voteData.proposalId),
+    where("userId", "==", voteData.userId)
+  );
+  const existingSnap = await getDocs(existingQ);
+  if (!existingSnap.empty) {
     throw new Error("You have already voted on this proposal.");
   }
 
-  localVotes.push(newVote);
-  localStorage.setItem(LOCAL_VOTES_KEY, JSON.stringify(localVotes));
+  const newVote: Vote = {
+    ...voteData,
+    id: `vote-${Math.random().toString(36).substring(7)}`,
+    votedAt: new Date().toISOString()
+  };
 
+  await setDoc(doc(db, "votes", newVote.id), newVote);
   return newVote.id;
 };
 
