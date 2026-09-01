@@ -139,19 +139,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // Wait for onAuthStateChanged to fully resolve (including Firestore fetch)
-      // before reporting success so the navigation in Auth.tsx is safe
-      await new Promise<void>((resolve) => {
-        const unsub = onAuthStateChanged(auth, async (fbUser) => {
-          if (fbUser) {
-            unsub();
-            resolve();
-          }
-        });
-      });
       return true;
-    } catch (error) {
-      console.error("Login error:", error);
+    } catch (error: any) {
+      // If user doesn't exist in Firebase Auth but DOES exist in Firestore (seeded user),
+      // auto-create their Auth account so they can sign in with the provided password
+      const isNotFound = error.code === 'auth/user-not-found' || 
+                         error.code === 'auth/invalid-credential' ||
+                         error.code === 'auth/invalid-email';
+      
+      if (isNotFound || error.code === 'auth/user-not-found') {
+        try {
+          // Check if this email exists in Firestore (seeded)
+          const q = query(collection(db, "users"), where("email", "==", email));
+          const snap = await getDocs(q);
+          if (!snap.empty) {
+            // Create the Firebase Auth account and sign in
+            console.log(`Creating Auth account for seeded user: ${email}`);
+            await createUserWithEmailAndPassword(auth, email, password);
+            return true;
+          }
+        } catch (createError: any) {
+          // If account already exists with different password
+          if (createError.code === 'auth/email-already-in-use') {
+            console.error("Account exists but password is wrong");
+          } else {
+            console.error("Auto-create failed:", createError);
+          }
+        }
+      }
+      
+      console.error("Login error:", error.code);
       return false;
     }
   };
