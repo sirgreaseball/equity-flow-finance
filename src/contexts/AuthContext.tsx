@@ -56,55 +56,57 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
-          // --- Demo Account Sync Logic ---
-          const demoEmails = ['j.mercer@firstcapitalgroup.io', 'dhruvsonar@gmail.com', 'sarah.johnson@techcorpsolutions.com'];
-          if (firebaseUser.email && demoEmails.includes(firebaseUser.email)) {
-            console.log(`Demo user detected: ${firebaseUser.email}. Syncing data...`);
-            
-            // 1. Check if the user document with THIS UID exists
-            const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-            if (!userDoc.exists()) {
-              // Find the "old" document by email and update its ID
-              const q = query(collection(db, "users"), where("email", "==", firebaseUser.email));
-              const querySnap = await getDocs(q);
-              
-              if (!querySnap.empty) {
-                const oldDoc = querySnap.docs[0];
-                const userData = oldDoc.data() as User;
-                const oldId = oldDoc.id;
-                
-                if (oldId !== firebaseUser.uid) {
-                  console.log(`Found legacy data for ${firebaseUser.email}. Transitioning ID from ${oldId} to ${firebaseUser.uid}`);
-                  const batch = writeBatch(db);
-                  batch.set(doc(db, "users", firebaseUser.uid), { ...userData, id: firebaseUser.uid });
-                  
-                  const bQ = query(collection(db, "businesses"), where("ownerId", "==", oldId));
-                  const bSnap = await getDocs(bQ);
-                  bSnap.forEach((d) => { batch.update(d.ref, { ownerId: firebaseUser.uid }); });
-                  
-                  const iQ = query(collection(db, "investments"), where("userId", "==", oldId));
-                  const iSnap = await getDocs(iQ);
-                  iSnap.forEach((d) => { batch.update(d.ref, { userId: firebaseUser.uid }); });
+          // Check if a Firestore doc already exists for this Firebase UID
+          let userDocSnap = await getDoc(doc(db, 'users', firebaseUser.uid));
 
-                  await batch.commit();
-                  console.log("Demo Sync Complete!");
-                }
+          // If not found by UID, search by email (handles seeded users with string IDs)
+          if (!userDocSnap.exists() && firebaseUser.email) {
+            const q = query(collection(db, "users"), where("email", "==", firebaseUser.email));
+            const querySnap = await getDocs(q);
+
+            if (!querySnap.empty) {
+              const oldDoc = querySnap.docs[0];
+              const oldId = oldDoc.id;
+
+              if (oldId !== firebaseUser.uid) {
+                console.log(`Migrating user ${firebaseUser.email} from ID ${oldId} → ${firebaseUser.uid}`);
+                const userData = oldDoc.data() as User;
+                const batch = writeBatch(db);
+
+                // Create doc under real Firebase UID
+                batch.set(doc(db, "users", firebaseUser.uid), { ...userData, id: firebaseUser.uid });
+
+                // Update businesses owned by this user
+                const bSnap = await getDocs(query(collection(db, "businesses"), where("ownerId", "==", oldId)));
+                bSnap.forEach((d) => { batch.update(d.ref, { ownerId: firebaseUser.uid }); });
+
+                // Update investments made by this user
+                const iSnap = await getDocs(query(collection(db, "investments"), where("userId", "==", oldId)));
+                iSnap.forEach((d) => { batch.update(d.ref, { userId: firebaseUser.uid }); });
+
+                await batch.commit();
+                console.log("User migration complete!");
+
+                // Re-fetch the doc under new UID
+                userDocSnap = await getDoc(doc(db, 'users', firebaseUser.uid));
               }
             }
           }
 
-          // Fetch user metadata from Firestore
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          if (userDoc.exists()) {
-            setUser(userDoc.data() as User);
+          if (userDocSnap.exists()) {
+            setUser(userDocSnap.data() as User);
           } else {
-            setUser({
+            // Brand new user — create a basic profile
+            const newUser: User = {
               id: firebaseUser.uid,
-              name: firebaseUser.displayName || 'User',
+              name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
               email: firebaseUser.email || '',
               role: 'investor',
-              createdAt: new Date().toISOString()
-            });
+              createdAt: new Date().toISOString(),
+              kycVerified: false,
+            };
+            await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+            setUser(newUser);
           }
         } else {
           setUser(null);
@@ -113,7 +115,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.error("Auth state error:", err);
         setUser(null);
       } finally {
-        // Always unblock the UI — no matter what happened above
         setIsLoading(false);
       }
     });
