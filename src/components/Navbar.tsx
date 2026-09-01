@@ -116,8 +116,24 @@ const Navbar = ({ onNavigate }: NavbarProps) => {
         </div>
       </div>
 
-      {/* Right: auth/wallet */}
+      {/* Right: auth/wallet & currency */}
       <div className="flex items-center gap-4 relative" ref={dropdownRef}>
+        
+        {/* Currency Toggle */}
+        <div className="hidden md:flex bg-muted/30 p-1 rounded-lg border border-border/40 items-center">
+          <button
+            onClick={() => setCurrency('USD')}
+            className={`px-3 py-1.5 rounded-md text-[10px] font-bold tracking-widest uppercase transition-all ${currency === 'USD' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            USD
+          </button>
+          <button
+            onClick={() => setCurrency('INR')}
+            className={`px-3 py-1.5 rounded-md text-[10px] font-bold tracking-widest uppercase transition-all ${currency === 'INR' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            INR
+          </button>
+        </div>
         {!isAuthenticated ? (
           <>
             <Link
