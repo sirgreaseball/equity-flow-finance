@@ -21,16 +21,16 @@ const Auth = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const { login, signup, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { login, signup, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Reactive redirect — fires once Firestore sync is fully done for ALL users (John & Sarah)
+  // Redirect as soon as auth state resolves
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {
+    if (isAuthenticated) {
       navigate('/dashboard');
     }
-  }, [isAuthenticated, authLoading, navigate]);
+  }, [isAuthenticated, navigate]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -216,9 +216,9 @@ const Auth = () => {
             <Button
               type="submit"
               className="w-full h-11 mt-6"
-              disabled={isLoading || authLoading}
+              disabled={isLoading}
             >
-              {isLoading || authLoading ? 'Please wait...' : (isLogin ? 'Sign in' : 'Create account')}
+              {isLoading ? 'Please wait...' : (isLogin ? 'Sign in' : 'Create account')}
             </Button>
           </form>
 

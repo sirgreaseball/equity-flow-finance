@@ -53,7 +53,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(!cachedUser);
 
   useEffect(() => {
+    // Safety net: never block UI for more than 3 seconds
+    const timeout = setTimeout(() => setIsLoading(false), 3000);
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      clearTimeout(timeout);
       try {
         if (firebaseUser) {
           // Check if a Firestore doc already exists for this Firebase UID
@@ -119,7 +122,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     });
 
-    return () => unsubscribe();
+    return () => { unsubscribe(); clearTimeout(timeout); };
   }, []);
 
   useEffect(() => {
