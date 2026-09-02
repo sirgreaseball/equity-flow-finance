@@ -1,6 +1,7 @@
 import { useState, useEffect, forwardRef } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { getUserInvestments, getListing, getBusiness } from "@/lib/db";
 import { Investment, Listing, Business, formatEquity } from "@/data/msme";
 
@@ -13,6 +14,7 @@ interface EnrichedInvestment extends Investment {
 
 const Dashboard = forwardRef<HTMLElement>((_, ref) => {
   const { user, isAuthenticated } = useAuth();
+  const { format } = useCurrency();
   const [investments, setInvestments] = useState<EnrichedInvestment[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -49,9 +51,9 @@ const Dashboard = forwardRef<HTMLElement>((_, ref) => {
   const estimatedReturns = totalInvested * 0.089; 
 
   const stats = [
-    { label: "Total Invested", value: `₹${totalInvested.toLocaleString()}` },
+    { label: "Total Invested", value: format(totalInvested) },
     { label: "Active Investments", value: activeCount.toString() },
-    { label: "Estimated Returns", value: `₹${estimatedReturns.toLocaleString(undefined, { maximumFractionDigits: 0 })}` },
+    { label: "Estimated Returns", value: format(Math.round(estimatedReturns)) },
   ];
   return (
     <section ref={ref} id="dashboard" className="px-6 md:px-10 py-24 border-t border-border">
@@ -108,7 +110,7 @@ const Dashboard = forwardRef<HTMLElement>((_, ref) => {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium text-foreground">₹{inv.amount.toLocaleString()}</p>
+                  <p className="text-sm font-medium text-foreground">{format(inv.amount)}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">Active stake</p>
                 </div>
               </div>

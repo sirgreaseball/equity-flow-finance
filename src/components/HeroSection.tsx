@@ -22,7 +22,7 @@ interface HeroSectionProps {
 }
 
 const HeroSection = forwardRef<HTMLElement, HeroSectionProps>(({ onExplore }, ref) => {
-  const { symbol, format } = useCurrency();
+  const { format } = useCurrency();
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -79,7 +79,7 @@ const HeroSection = forwardRef<HTMLElement, HeroSectionProps>(({ onExplore }, re
           >
             {[
               { label: "Businesses Listed", value: "120+" },
-              { label: "Total Invested", value: `${symbol}4.2Cr` },
+              { label: "Total Invested", value: format(42000000) },
               { label: "Avg. Returns", value: "18.5%" },
             ].map((stat) => (
               <div key={stat.label}>
